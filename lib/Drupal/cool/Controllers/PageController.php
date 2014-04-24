@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\minka_core\Controllers;
+namespace Drupal\cool\Controllers;
 
 interface PageController {
 
@@ -15,12 +15,12 @@ interface PageController {
   static public function getDefinition();
 
   /**
-   * Responsible for the page construction itself.
-   */
-  static public function pageCallback();
-
-  /**
    * Responsible for the page access restriction.
    */
   static public function accessCallback();
+
+  /**
+   * Responsible for the page construction itself.
+   */
+  static public function pageCallback();
 }
