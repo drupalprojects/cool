@@ -11,19 +11,13 @@
  * Implements hook_menu().
  */
 function cool_menu() {
-
   $items = array();
-
-  cool_include_lib_class_files_with_pattern('PageControllers');
-  $page_controller_classes = cool_get_interface_implementations('\Drupal\cool\Controllers\PageController');
-
-  foreach ($page_controller_classes as $class_name) {
+  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('PageControllers', '\Drupal\cool\Controllers\PageController');
+  foreach ($classes as $class_name) {
     if (method_exists($class_name, 'getDefinition')) {
-
       if (!method_exists($class_name, 'pageCallback')) {
         throw new Exception(t('Class @classname do not have the pageCallback method', array('@classname' => $class_name)));
       }
-
       $items[$class_name::getPath()] = array_merge(
           array(
         'page callback' => 'cool_default_page_callback',
@@ -51,79 +45,4 @@ function cool_default_page_callback($class_name) {
  */
 function cool_default_page_access_callback($class_name) {
   return $class_name::accessCallback();
-}
-
-/**
- * Returns an array with the classes that extends the specified class
- */
-function cool_get_interface_implementations($interface_name) {
-  $classes = array();
-  foreach (get_declared_classes() as $class_name) {
-    $reflection_class = new ReflectionClass($class_name);
-    if ($reflection_class->implementsinterface($interface_name)) {
-      $classes[$class_name] = $class_name;
-    }
-  }
-  return $classes;
-}
-
-/**
- * Returns an array with the classes that extends the specified class
- */
-function cool_get_subclass_implementations($parent_class_name) {
-  $classes = array();
-  foreach (get_declared_classes() as $class_name) {
-    $reflection_class = new ReflectionClass($class_name);
-    if ($reflection_class->isSubclassOf($parent_class_name)) {
-      $classes[$class_name] = $class_name;
-    }
-  }
-  return $classes;
-}
-
-function cool_include_lib_class_files_with_pattern($folder_name) {
-  $enabled_modules = module_list();
-  foreach ($enabled_modules as $module_name) {
-    $path = drupal_get_path('module', $module_name) . '/lib/Drupal/' . $module_name;
-    if (is_dir($path)) {
-      $folders = _cool_list_folders_with_pattern($path, $folder_name);
-      if (!empty($folders)) {
-        foreach ($folders as $folder) {
-          foreach (_cool_list_classes_within_folder($folder) as $class_name) {
-            include_once $class_name;
-          }
-        }
-      }
-    }
-  }
-}
-
-function _cool_list_folders_with_pattern($dir, $pattern) {
-  $folders = array();
-  $ffs = scandir($dir);
-  foreach ($ffs as $ff) {
-    if ($ff != '.' && $ff != '..') {
-      $full_path = $dir . '/' . $ff;
-      if (is_dir($full_path)) {
-        if (preg_match('/' . $pattern . '/', $full_path)) {
-          $folders[] = $full_path;
-        }
-        else {
-          $folders = array_merge($folders, _cool_list_folders_with_pattern($full_path, $pattern));
-        }
-      }
-    }
-  }
-  return $folders;
-}
-
-function _cool_list_classes_within_folder($dir) {
-  $classes = array();
-  $ffs = scandir($dir);
-  foreach ($ffs as $ff) {
-    if ($ff != '.' && $ff != '..') {
-      $classes[] = $dir . '/' . $ff;
-    }
-  }
-  return $classes;
 }
