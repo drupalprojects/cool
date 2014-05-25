@@ -46,3 +46,80 @@ function cool_default_page_callback($class_name) {
 function cool_default_page_access_callback($class_name) {
   return $class_name::accessCallback();
 }
+
+/**
+ * Implements hook_block_info()
+ */
+function cool_block_info() {
+  $blocks = array();
+  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  foreach ($classes as $class_name) {
+    if (method_exists($class_name, 'getAdminTitle')) {
+      if (!method_exists($class_name, 'getContent')) {
+        throw new Exception(t('Class @classname do not have the getContent method', array('@classname' => $class_name)));
+      }
+      $blocks[$class_name::getId()] = array_merge(
+        array(
+          'info' => $class_name::getAdminTitle(),
+          'cache' => DRUPAL_NO_CACHE,
+        ),
+        $class_name::getDefinition()
+      );
+    }
+  }
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view()
+ */
+function cool_block_view($delta = '') {
+  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  $block = array();
+  foreach ($classes as $class_name) {
+    if($class_name::getId() == $delta) {
+      $block['subject'] = $class_name::getSubject();
+      $block['content'] = $class_name::getContent();
+    }
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_forms()
+ */
+function cool_forms($form_id, $args) {
+  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('FormControllers', '\Drupal\cool\Controllers\FormController');
+  unset($classes['Drupal\\cool\\BaseForm']);
+  $forms = array();
+  foreach ($classes as $class_name) {
+    $forms[$class_name::getId()] = array(
+      'callback' => 'cool_default_form_callback',
+      'callback arguments' => array($class_name),
+    );
+  }
+  return $forms;  
+}
+
+/**
+ * Default callback to build forms through FormController
+ */
+function cool_default_form_callback($form, &$form_state, $class_name) {
+  return $class_name::build();
+}
+
+/**
+ * Default submit() callback for FormController
+ */
+function cool_default_form_validate($form, &$form_state) {
+  $class_name = $form_state['values']['cool_class_name'];
+  return $class_name::validate($form, $form_state);
+}
+
+/**
+ * Default submit() callback for FormController
+ */
+function cool_default_form_submit($form, &$form_state) {
+  $class_name = $form_state['values']['cool_class_name'];
+  return $class_name::submit($form, $form_state);
+}
