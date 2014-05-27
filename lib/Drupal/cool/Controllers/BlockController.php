@@ -20,6 +20,16 @@ interface BlockController {
   static public function getDefinition();
 
   /**
+   * Passed to hook_block_info().
+   */
+  static public function getConfiguration();
+
+  /**
+   * Passed to hook_block_save().
+   */
+  static public function saveConfiguration($edit);
+
+  /**
    * Passed to hook_block_view().
    */
   static public function getSubject();

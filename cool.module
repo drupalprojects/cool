@@ -71,6 +71,32 @@ function cool_block_info() {
 }
 
 /**
+ * Implements hook_block_configure()
+ */
+function cool_block_configure($delta = '') {
+  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  $block = array();
+  foreach ($classes as $class_name) {
+    if($class_name::getId() == $delta) {
+      $form = $class_name::getConfiguration();
+    }
+  }
+  return $form;
+}
+
+/**
+ * Implements hook_block_save()
+ */
+function cool_block_save($delta = '', $edit = array()) {
+  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  foreach ($classes as $class_name) {
+    if($class_name::getId() == $delta) {
+      return $class_name::saveConfiguration($edit);
+    }
+  }
+}
+
+/**
  * Implements hook_block_view()
  */
 function cool_block_view($delta = '') {
