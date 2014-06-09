@@ -53,6 +53,7 @@ function cool_default_page_access_callback($class_name) {
 function cool_block_info() {
   $blocks = array();
   $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  unset($classes['Drupal\\cool\\BaseBlock']);
   foreach ($classes as $class_name) {
     if (method_exists($class_name, 'getAdminTitle')) {
       if (!method_exists($class_name, 'getContent')) {
@@ -75,6 +76,7 @@ function cool_block_info() {
  */
 function cool_block_configure($delta = '') {
   $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  unset($classes['Drupal\\cool\\BaseBlock']);
   $block = array();
   foreach ($classes as $class_name) {
     if($class_name::getId() == $delta) {
@@ -89,6 +91,7 @@ function cool_block_configure($delta = '') {
  */
 function cool_block_save($delta = '', $edit = array()) {
   $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  unset($classes['Drupal\\cool\\BaseBlock']);
   foreach ($classes as $class_name) {
     if($class_name::getId() == $delta) {
       return $class_name::saveConfiguration($edit);
@@ -101,6 +104,7 @@ function cool_block_save($delta = '', $edit = array()) {
  */
 function cool_block_view($delta = '') {
   $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  unset($classes['Drupal\\cool\\BaseBlock']);
   $block = array();
   foreach ($classes as $class_name) {
     if($class_name::getId() == $delta) {
@@ -131,7 +135,8 @@ function cool_forms($form_id, $args) {
  * Default callback to build forms through FormController
  */
 function cool_default_form_callback($form, &$form_state, $class_name) {
-  return $class_name::build();
+  $args = array_slice(func_get_args(), 3);
+  return call_user_func_array($class_name . '::build', $args);
 }
 
 /**
