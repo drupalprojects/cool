@@ -54,8 +54,10 @@ class Loader {
     $classes = array();
     foreach (get_declared_classes() as $class_name) {
       $reflection_class = new \ReflectionClass($class_name);
-      if ($reflection_class->implementsinterface($interface_name)) {
-        $classes[$class_name] = $class_name;
+      if (!$reflection_class->isAbstract()) {
+        if ($reflection_class->implementsinterface($interface_name)) {
+          $classes[$class_name] = $class_name;
+        }
       }
     }
     return $classes;
