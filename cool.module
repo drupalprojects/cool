@@ -144,7 +144,7 @@ function cool_default_form_callback($form, &$form_state, $class_name) {
  */
 function cool_default_form_validate($form, &$form_state) {
   $class_name = $form_state['values']['cool_class_name'];
-  return $class_name::validate($form, $form_state);
+  $class_name::validate($form, $form_state);
 }
 
 /**
@@ -152,5 +152,5 @@ function cool_default_form_validate($form, &$form_state) {
  */
 function cool_default_form_submit($form, &$form_state) {
   $class_name = $form_state['values']['cool_class_name'];
-  return $class_name::submit($form, $form_state);
+  $class_name::submit($form, $form_state);
 }
