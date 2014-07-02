@@ -121,6 +121,7 @@ function cool_block_view($delta = '') {
 function cool_forms($form_id, $args) {
   $classes = \Drupal\cool\Loader::mapImplementationsAvailable('FormControllers', '\Drupal\cool\Controllers\FormController');
   unset($classes['Drupal\\cool\\BaseForm']);
+  unset($classes['Drupal\\cool\\BaseSettingsForm']);
   $forms = array();
   foreach ($classes as $class_name) {
     $forms[$class_name::getId()] = array(

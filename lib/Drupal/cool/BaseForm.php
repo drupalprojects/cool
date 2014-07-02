@@ -39,7 +39,7 @@ abstract class BaseForm implements Controllers\FormController {
   }
 
   static public function submit($form, &$form_state) {
-    throw new Exception('You need to implement the submit() method');
+    throw new \Exception('You need to implement the submit() method');
   }
 
 }
