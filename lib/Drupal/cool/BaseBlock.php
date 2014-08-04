@@ -4,13 +4,9 @@ namespace Drupal\cool;
 
 abstract class BaseBlock implements Controllers\BlockController {
 
-  static public function getId() {
-    throw new \Exception('You need to implement the getId() method');
-  }
+  static public function getId();
 
-  public static function getAdminTitle() {
-    throw new \Exception('You need to implement the getAdminTitle() method');
-  }
+  public static function getAdminTitle();
 
   static public function getDefinition() {
     return array();
@@ -28,8 +24,6 @@ abstract class BaseBlock implements Controllers\BlockController {
     return '';
   }
 
-  public static function getContent() {
-    throw new \Exception('You need to implement the getContent() method');
-  }
+  public static function getContent();
 
 }
