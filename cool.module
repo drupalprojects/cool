@@ -20,8 +20,7 @@ function cool_menu() {
       }
       $items[$class_name::getPath()] = array_merge(
           array(
-        'page callback' => 'cool_default_page_callback',
-        'page arguments' => array($class_name),
+        'page callback' => $class_name . '::pageCallback',
         'access callback' => 'cool_default_page_access_callback',
         'access arguments' => array($class_name),
           ), $class_name::getDefinition()
@@ -29,14 +28,6 @@ function cool_menu() {
     }
   }
   return $items;
-}
-
-/**
- * Default function to call the page callback from page controller classes
- * @param string $class_name
- */
-function cool_default_page_callback($class_name) {
-  return $class_name::pageCallback();
 }
 
 /**

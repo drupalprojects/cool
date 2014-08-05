@@ -16,6 +16,9 @@ interface PageController {
 
   /**
    * Responsible for the page access restriction.
+   * This method cannot be called directly from hook_menu, like pageCallback,
+   * without the "cool_default_page_access_callback" function, because 
+   * "_menu_check_access" checks for function_exists()
    */
   static public function accessCallback();
 
