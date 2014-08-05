@@ -69,7 +69,21 @@ class Loader {
   static private function includeLibClassFilesWithPattern($folder_name) {
     $enabled_modules = module_list();
     foreach ($enabled_modules as $module_name) {
-      $path = drupal_get_path('module', $module_name) . '/lib/Drupal/' . $module_name;
+      $module_path = drupal_get_path('module', $module_name);
+      // PSR-0 compliant search
+      $path = $module_path . '/lib/Drupal/' . $module_name;
+      if (is_dir($path)) {
+        $folders = self::listFoldersWithPattern($path, $folder_name);
+        if (!empty($folders)) {
+          foreach ($folders as $folder) {
+            foreach (self::listClassesWithinFolder($folder) as $class_name) {
+              include_once $class_name;
+            }
+          }
+        }
+      }
+      // PSR-4 compliant search
+      $path = $module_path . '/src';
       if (is_dir($path)) {
         $folders = self::listFoldersWithPattern($path, $folder_name);
         if (!empty($folders)) {
