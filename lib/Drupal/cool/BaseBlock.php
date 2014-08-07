@@ -4,26 +4,26 @@ namespace Drupal\cool;
 
 abstract class BaseBlock implements Controllers\BlockController {
 
-  static public function getId();
+  abstract static public function getId();
 
-  public static function getAdminTitle();
+  abstract static public function getAdminTitle();
 
   static public function getDefinition() {
     return array();
   }
 
-  public static function getConfiguration() {
+  static public function getConfiguration() {
     return array();
   }
 
-  public static function saveConfiguration($edit) {
+  static public function saveConfiguration($edit) {
     
   }
 
-  public static function getSubject() {
+  static public function getSubject() {
     return '';
   }
 
-  public static function getContent();
+  abstract static public function getContent();
 
 }
