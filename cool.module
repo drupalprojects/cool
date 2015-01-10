@@ -7,23 +7,27 @@
  * This module enhances the Drupal DX through classes and helpers
  */
 
+use \Drupal\cool\Loader;
+
+include_once 'cool.dynamic-blocks.inc';
+
 /**
  * Implements hook_menu().
  */
 function cool_menu() {
   $items = array();
-  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('PageControllers', '\Drupal\cool\Controllers\PageController');
+  $classes = Loader::mapImplementationsAvailable('PageControllers', '\Drupal\cool\Controllers\PageController');
   foreach ($classes as $class_name) {
     if (method_exists($class_name, 'getDefinition')) {
       if (!method_exists($class_name, 'pageCallback')) {
         throw new Exception(t('Class @classname do not have the pageCallback method', array('@classname' => $class_name)));
       }
       $items[$class_name::getPath()] = array_merge(
-          array(
-        'page callback' => $class_name . '::pageCallback',
-        'access callback' => 'cool_default_page_access_callback',
-        'access arguments' => array($class_name),
-          ), $class_name::getDefinition()
+        array(
+          'page callback' => $class_name . '::pageCallback',
+          'access callback' => 'cool_default_page_access_callback',
+          'access arguments' => array($class_name),
+        ), $class_name::getDefinition()
       );
     }
   }
@@ -43,49 +47,72 @@ function cool_default_page_access_callback($class_name) {
  */
 function cool_block_info() {
   $blocks = array();
-  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  $classes = Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
   unset($classes['Drupal\\cool\\BaseBlock']);
+  unset($classes['Drupal\\cool\\BaseDynamicBlock']);
   foreach ($classes as $class_name) {
     if (method_exists($class_name, 'getAdminTitle')) {
       if (!method_exists($class_name, 'getContent')) {
         throw new Exception(t('Class @classname do not have the getContent method', array('@classname' => $class_name)));
       }
-      $blocks[$class_name::getId()] = array_merge(
-        array(
-          'info' => $class_name::getAdminTitle(),
-          'cache' => DRUPAL_NO_CACHE,
-        ),
-        $class_name::getDefinition()
-      );
+      $isDynamicBlock = Loader::classIsSubclassOf($class_name, '\Drupal\cool\BaseDynamicBlock');
+      if (!$isDynamicBlock) {
+        $blocks[$class_name::getId()] = array_merge(
+          array(
+            'info' => $class_name::getAdminTitle(),
+            'cache' => DRUPAL_NO_CACHE,
+          ),
+          $class_name::getDefinition()
+        );
+      }
     }
   }
   return $blocks;
 }
 
 /**
+ * Implements hook_block_info_alter()
+ */
+function cool_block_info_alter(&$blocks, $theme, $code_blocks) {
+  if (isset($blocks['block'])) {
+    $cool_dynblocks = cool_get_dynamic_blocks();
+    foreach ($blocks['block'] as &$block) {
+      if (isset($cool_dynblocks[$block['delta']])) {
+        $cool_dynamicblock_type = $cool_dynblocks[$block['delta']]['class'];
+        if(class_exists($cool_dynamicblock_type)) {
+          $block['info'] = $cool_dynamicblock_type::getAdminTitle($block['delta']);
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_block_configure()
  */
 function cool_block_configure($delta = '') {
-  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  $classes = Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
   unset($classes['Drupal\\cool\\BaseBlock']);
-  $block = array();
+  unset($classes['Drupal\\cool\\BaseDynamicBlock']);
   foreach ($classes as $class_name) {
-    if($class_name::getId() == $delta) {
-      $form = $class_name::getConfiguration();
+    $isDynamicBlock = Loader::classIsSubclassOf($class_name, '\Drupal\cool\BaseDynamicBlock');
+    if (!$isDynamicBlock && ($delta == $class_name::getId())) {
+      return $class_name::getConfiguration();
     }
   }
-  return $form;
 }
 
 /**
  * Implements hook_block_save()
  */
 function cool_block_save($delta = '', $edit = array()) {
-  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  $classes = Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
   unset($classes['Drupal\\cool\\BaseBlock']);
+  unset($classes['Drupal\\cool\\BaseDynamicBlock']);
   foreach ($classes as $class_name) {
-    if($class_name::getId() == $delta) {
-      return $class_name::saveConfiguration($edit);
+    $isDynamicBlock = Loader::classIsSubclassOf($class_name, '\Drupal\cool\BaseDynamicBlock');
+    if (!$isDynamicBlock && ($delta == $class_name::getId())) {
+      return $class_name::saveConfiguration($edit, $delta);
     }
   }
 }
@@ -94,13 +121,22 @@ function cool_block_save($delta = '', $edit = array()) {
  * Implements hook_block_view()
  */
 function cool_block_view($delta = '') {
-  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
+  $cool_dynblocks = cool_get_dynamic_blocks();
+  $classes = Loader::mapImplementationsAvailable('BlockControllers', '\Drupal\cool\Controllers\BlockController');
   unset($classes['Drupal\\cool\\BaseBlock']);
+  unset($classes['Drupal\\cool\\BaseDynamicBlock']);
   $block = array();
   foreach ($classes as $class_name) {
-    if($class_name::getId() == $delta) {
-      $block['subject'] = $class_name::getSubject();
-      $block['content'] = $class_name::getContent();
+    $isDynamicBlock = Loader::classIsSubclassOf($class_name, '\Drupal\cool\BaseDynamicBlock');
+    if ($isDynamicBlock && $class_name == $cool_dynblocks[$delta]['class']) {
+      $block['subject'] = $class_name::getSubject($delta);
+      $block['content'] = $class_name::getContent($delta);
+    }
+    else {
+      if ($class_name::getId() == $delta) {
+        $block['subject'] = $class_name::getSubject();
+        $block['content'] = $class_name::getContent();
+      }
     }
   }
   return $block;
@@ -110,7 +146,7 @@ function cool_block_view($delta = '') {
  * Implements hook_forms()
  */
 function cool_forms($form_id, $args) {
-  $classes = \Drupal\cool\Loader::mapImplementationsAvailable('FormControllers', '\Drupal\cool\Controllers\FormController');
+  $classes = Loader::mapImplementationsAvailable('FormControllers', '\Drupal\cool\Controllers\FormController');
   unset($classes['Drupal\\cool\\BaseForm']);
   unset($classes['Drupal\\cool\\BaseSettingsForm']);
   $forms = array();
@@ -120,7 +156,7 @@ function cool_forms($form_id, $args) {
       'callback arguments' => array($class_name),
     );
   }
-  return $forms;  
+  return $forms;
 }
 
 /**
@@ -128,7 +164,10 @@ function cool_forms($form_id, $args) {
  */
 function cool_default_form_callback($form, &$form_state, $class_name) {
   $args = array_slice(func_get_args(), 3);
-  return call_user_func_array($class_name . '::build', array_merge(array($form, $form_state), $args));
+  return call_user_func_array($class_name . '::build', array_merge(array(
+    $form,
+    $form_state
+  ), $args));
 }
 
 /**

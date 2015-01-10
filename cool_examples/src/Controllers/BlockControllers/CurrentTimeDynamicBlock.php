@@ -2,18 +2,14 @@
 
 namespace Drupal\cool_examples\Controllers\BlockControllers;
 
-class CurrentTimeBlock implements \Drupal\cool\Controllers\BlockController {
-
-  public static function getId() {
-    return 'cool_example_current_time_block';
-  }
+class CurrentTimeDynamicBlock extends \Drupal\cool\BaseDynamicBlock {
 
   public static function getAdminTitle($delta = '') {
-    return 'Cool Block - Admin title';
+    return 'Cool Block - Admin title (' . $delta . ')';
   }
 
   public static function getTypeName($delta = '') {
-    return self::getAdminTitle();
+    return 'Cool Dynamic Block';
   }
 
   static public function getDefinition($delta = '') {
@@ -23,23 +19,27 @@ class CurrentTimeBlock implements \Drupal\cool\Controllers\BlockController {
   }
 
   public static function getConfiguration($delta = '') {
+    if (!empty($delta)) {
+      $cool_dynblocks = cool_get_dynamic_blocks();
+    }
     $form = array();
     $form['container'] = array(
       '#type' => 'fieldset',
-      '#title' => t('@title specific configurations', array('@title' => self::getAdminTitle()))
+      '#title' => t('"@title" specific configurations', array('@title' => self::getTypeName()))
     );
     $form['container']['date_format'] = array(
       '#type' => 'textfield',
       '#required' => TRUE,
-      '#default_value' => variable_get('cool_example_current_time_block_date_format', 'Y-m-d'),
       '#title' => 'Date format',
       '#description' => 'The date format to use when showing the date',
     );
+    if (empty($delta)) {
+      $form['container']['date_format']['#default_value'] = 'Y-m-d';
+    }
+    elseif (isset($cool_dynblocks[$delta])) {
+      $form['container']['date_format']['#default_value'] = $cool_dynblocks[$delta]['values']['date_format'];
+    }
     return $form;
-  }
-
-  public static function saveConfiguration($edit, $delta = '') {
-    variable_set('cool_example_current_time_block_date_format', $edit['date_format']);
   }
 
   public static function getSubject($delta = '') {

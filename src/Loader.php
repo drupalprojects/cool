@@ -48,6 +48,19 @@ class Loader {
   }
 
   /**
+   * @param $class_name
+   * @param $parent_class_name
+   * @return bool
+   */
+  static public function classIsSubclassOf($class_name, $parent_class_name) {
+    $reflection_class = new \ReflectionClass($class_name);
+    if ($reflection_class->isSubclassOf($parent_class_name)) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Returns an array with the classes that implements the specified interface
    */
   static public function getInterfaceImplementations($interface_name) {
@@ -135,5 +148,4 @@ class Loader {
     }
     return $classes;
   }
-
 }
