@@ -37,11 +37,10 @@ function cool_form_block_add_block_form_alter(&$form, &$form_state) {
     $isDynamicBlock = Loader::classIsSubclassOf($class_name, '\Drupal\cool\BaseDynamicBlock');
     if ($isDynamicBlock && ($cool_dynamicblock_type == $class_name)) {
       drupal_set_title(t('Blocks - add new @type', array('@type' => $class_name::getTypeName())));
-      $form['module']['#value'] = 'cool';
       $form['settings']['info']['#description'] = t('You can use whatever you wish here or keep "cool_dynblock_title", that will be converted dinamically to the format "@format"', array('@format' => $class_name::getAdminTitle('[block_delta]')))
         . '<br/>' . $form['settings']['info']['#description'];
       $form['settings']['info']['#default_value'] = 'cool_dynblock_title';
-      $form['settings']['body_field']['#access'] = FALSE;
+      $form['settings']['body_field']['body']['#required'] = FALSE;
       $configuration_form = $class_name::getConfiguration();
       $form['settings'][] = $configuration_form;
       //        $form['#validate'][] = 'cool_form_block_add_block_form_validate';
@@ -95,7 +94,7 @@ function cool_form_block_admin_configure_alter(&$form, &$form_state) {
     foreach ($configuration_items as $key => $item) {
       $form['settings'][$key] = $item;
     }
-    unset($form['settings']['body_field']);
+    $form['settings']['body_field']['body']['#required'] = FALSE;
     $form['#submit'][] = 'cool_form_block_admin_configure_submit';
   }
 }
