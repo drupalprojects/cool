@@ -12,7 +12,7 @@ class Loader {
    * @return array
    */
   static public function mapSubclassesAvailable($folder_name, $parent_class_name, $include = FALSE) {
-    self::includeLibClassFilesWithPattern($folder_name);
+    self::includeLibClassFilesWithPatternForEnabledModules($folder_name);
     $classes = self::getSubclassImplementations($parent_class_name);
     if ($include) {
       array_unshift($classes, $parent_class_name);
@@ -28,7 +28,7 @@ class Loader {
    * @return array
    */
   static public function mapImplementationsAvailable($folder_name, $interface_name) {
-    self::includeLibClassFilesWithPattern($folder_name);
+    self::includeLibClassFilesWithPatternForEnabledModules($folder_name);
     $classes = self::getInterfaceImplementations($interface_name);
     return $classes;
   }
@@ -79,9 +79,13 @@ class Loader {
   /**
    * @param string $folder_name
    */
-  static private function includeLibClassFilesWithPattern($folder_name) {
+  static public function includeLibClassFilesWithPatternForEnabledModules($folder_name) {
     $enabled_modules = module_list();
-    foreach ($enabled_modules as $module_name) {
+    self::includeLibClassFilesWithPattern($enabled_modules, $folder_name);
+  }
+
+  static public function includeLibClassFilesWithPattern($modules, $folder_name) {
+    foreach ($modules as $module_name) {
       $module_path = drupal_get_path('module', $module_name);
       // PSR-0 compliant search
       $path = $module_path . '/lib/Drupal/' . $module_name;
