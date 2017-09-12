@@ -228,13 +228,21 @@ function cool_entity_model_create($class_name, $loadFiles = FALSE) {
       $entity_type->name = $ModelEntity->getEntityTypeName();
       $entity_type->label = $ModelEntity->getEntityTypeLabel();
       foreach ($ModelEntity->getEntityTypeProperties() as $property_field) {
+        $behavior = $property_field['behaviour'] ? $property_field['behaviour'] : NULL;
         $entity_type->addProperty(
           $property_field['name'],
           $property_field['label'],
-          $property_field['type']
+          $property_field['type'],
+          $behavior
         );
       }
       $entity_type->save();
+
+      $bundle = new Bundle();
+      $bundle->entity_type = $entity_type->name;
+      $bundle->name = $ModelEntity->getEntityTypeName();
+      $bundle->label = $ModelEntity->getEntityTypeLabel();
+      $bundle->save();
     }
   }
 }
