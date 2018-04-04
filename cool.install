@@ -1,5 +1,9 @@
 <?php
 
+namespace Drupal\cool;
+
+use Drupal\cool\Loader;
+
 /**
  * Implements hook_schema().
  */
